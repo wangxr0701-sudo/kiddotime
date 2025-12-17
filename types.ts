@@ -1,3 +1,4 @@
+
 export enum TaskStatus {
   PENDING = 'PENDING',
   ACTIVE = 'ACTIVE',
@@ -25,5 +26,6 @@ export enum AppState {
   ONBOARDING = 'ONBOARDING',
   PLANNING = 'PLANNING',
   DOING = 'DOING',
-  SUMMARY = 'SUMMARY'
+  SUMMARY = 'SUMMARY',
+  CALENDAR = 'CALENDAR'
 }
