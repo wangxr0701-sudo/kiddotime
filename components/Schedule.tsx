@@ -1,14 +1,18 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Task, TaskStatus } from '../types';
-import { Play, Check, Clock, Coffee, Trash2 } from 'lucide-react';
+import { Play, Check, Clock, Coffee, Trash2, Plus } from 'lucide-react';
+import TaskInput from './TaskInput';
 
 interface ScheduleProps {
   tasks: Task[];
   onStartTask: (task: Task) => void;
   onDeleteTask: (taskId: string) => void;
+  onTasksChange: (tasks: Task[]) => void;
 }
 
-const Schedule: React.FC<ScheduleProps> = ({ tasks, onStartTask, onDeleteTask }) => {
+const Schedule: React.FC<ScheduleProps> = ({ tasks, onStartTask, onDeleteTask, onTasksChange }) => {
+  const [showAddModal, setShowAddModal] = useState(false);
+  
   const pendingTasks = tasks.filter(t => t.status === TaskStatus.PENDING || t.status === TaskStatus.ACTIVE);
   const completedTasks = tasks.filter(t => t.status === TaskStatus.COMPLETED);
 
@@ -24,7 +28,26 @@ const Schedule: React.FC<ScheduleProps> = ({ tasks, onStartTask, onDeleteTask })
   const progressPercent = tasks.length > 0 ? (completedMinutes / totalMinutes) * 100 : 0;
 
   return (
-    <div className="w-full max-w-4xl mx-auto p-4 animate-fade-in">
+    <div className="w-full max-w-4xl mx-auto p-4 animate-fade-in relative">
+      
+      {/* Add Task Modal */}
+      {showAddModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/30 backdrop-blur-sm animate-fade-in">
+          <div className="bg-white w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden animate-bounce-slight">
+            <div className="p-4">
+               <TaskInput 
+                 tasks={tasks} 
+                 onTasksChange={onTasksChange} 
+                 isInline={true}
+                 onClose={() => setShowAddModal(false)}
+               />
+            </div>
+          </div>
+          {/* Backdrop click to close */}
+          <div className="absolute inset-0 -z-10" onClick={() => setShowAddModal(false)}></div>
+        </div>
+      )}
+
       {/* Header Stat */}
       <div className="bg-gradient-to-r from-violet-600 to-indigo-600 rounded-3xl p-8 text-white shadow-2xl mb-8 relative overflow-hidden">
         <div className="relative z-10 flex flex-col md:flex-row justify-between items-center gap-6">
@@ -49,7 +72,16 @@ const Schedule: React.FC<ScheduleProps> = ({ tasks, onStartTask, onDeleteTask })
         <div className="space-y-6">
           <div className="flex items-center justify-between px-2">
             <h3 className="text-xl font-bold text-slate-700">Up Next</h3>
-            <span className="bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full text-xs font-bold">{pendingTasks.length} Missions</span>
+            <div className="flex items-center gap-3">
+              <span className="bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full text-xs font-bold">{pendingTasks.length} Missions</span>
+              <button 
+                onClick={() => setShowAddModal(true)}
+                className="bg-indigo-600 hover:bg-indigo-700 text-white p-2 rounded-full shadow-lg hover:shadow-xl transition-all transform hover:scale-105"
+                title="Add New Task"
+              >
+                <Plus className="w-5 h-5" />
+              </button>
+            </div>
           </div>
           
           <div className="space-y-4">
@@ -110,6 +142,12 @@ const Schedule: React.FC<ScheduleProps> = ({ tasks, onStartTask, onDeleteTask })
             {pendingTasks.length === 0 && completedTasks.length === 0 && (
               <div className="text-center p-12 bg-slate-50 rounded-3xl border border-slate-100">
                 <p className="text-slate-400">No tasks here yet.</p>
+                <button 
+                  onClick={() => setShowAddModal(true)} 
+                  className="mt-4 text-indigo-600 font-bold hover:underline"
+                >
+                  Add a Mission
+                </button>
               </div>
             )}
           </div>

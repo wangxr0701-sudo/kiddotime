@@ -130,6 +130,7 @@ const App: React.FC = () => {
             tasks={tasks} 
             onStartTask={handleStartTask} 
             onDeleteTask={handleDeleteTask}
+            onTasksChange={setTasks}
           />
         )}
 
