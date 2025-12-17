@@ -94,18 +94,6 @@ const Schedule: React.FC<ScheduleProps> = ({ tasks, onStartTask, onDeleteTask, o
                   : 'bg-white border-slate-100 hover:border-indigo-200'
                 }`}
               >
-                {/* Delete Button */}
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onDeleteTask(task.id);
-                  }}
-                  className="absolute top-2 right-2 p-2 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-full opacity-0 group-hover:opacity-100 transition-all z-20"
-                  title="Remove task"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
-
                 <div className="p-5 flex items-center gap-5">
                    <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-3xl shadow-sm ${task.isBreak ? 'bg-white' : 'bg-slate-50'}`}>
                      {task.emoji}
@@ -121,14 +109,32 @@ const Schedule: React.FC<ScheduleProps> = ({ tasks, onStartTask, onDeleteTask, o
                         {index === 0 && <span className="bg-amber-100 text-amber-700 px-2 py-0.5 rounded text-xs">NEXT</span>}
                      </div>
                    </div>
-                   <button 
-                     onClick={() => onStartTask(task)}
-                     className={`w-12 h-12 rounded-full flex items-center justify-center shadow-md transition-transform hover:scale-110 active:scale-95 ${
-                        task.isBreak ? 'bg-emerald-500 text-white' : 'bg-indigo-600 text-white'
-                     }`}
-                   >
-                     <Play className="w-6 h-6 ml-1 fill-current" />
-                   </button>
+                   
+                   <div className="flex items-center gap-2">
+                     {/* Delete Button - Moved here to prevent overlap */}
+                     <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onDeleteTask(task.id);
+                        }}
+                        className="p-3 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-full opacity-0 group-hover:opacity-100 transition-all"
+                        title="Remove task"
+                        aria-label="Remove task"
+                      >
+                        <Trash2 className="w-5 h-5" />
+                      </button>
+
+                     <button 
+                       onClick={() => onStartTask(task)}
+                       title="Click to start this mission"
+                       aria-label="Start mission"
+                       className={`w-12 h-12 rounded-full flex items-center justify-center shadow-md transition-transform hover:scale-110 active:scale-95 ${
+                          task.isBreak ? 'bg-emerald-500 text-white' : 'bg-indigo-600 text-white'
+                       }`}
+                     >
+                       <Play className="w-6 h-6 ml-1 fill-current" />
+                     </button>
+                   </div>
                 </div>
               </div>
             ))}
