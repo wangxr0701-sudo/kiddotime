@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus, BookOpen, Calculator, Languages, Smile, PenTool, X } from 'lucide-react';
+import { Plus, BookOpen, Calculator, Languages, Smile, PenTool, X, Coffee } from 'lucide-react';
 import { Task, TaskStatus } from '../types';
 
 interface TaskInputProps {
@@ -13,7 +13,8 @@ interface TaskInputProps {
 const DEFAULT_SUBJECTS = [
   { name: 'Math', icon: <Calculator className="w-5 h-5" />, color: 'bg-blue-100 text-blue-600', emoji: '📐' },
   { name: 'English', icon: <Languages className="w-5 h-5" />, color: 'bg-green-100 text-green-600', emoji: '📖' },
-  { name: 'Chinese', icon: <BookOpen className="w-5 h-5" />, color: 'bg-red-100 text-red-600', emoji: '🧧' },
+  { name: 'Chinese', icon: <BookOpen className="w-5 h-5" />, color: 'bg-red-100 text-red-600', emoji: '📚' },
+  { name: 'Rest', icon: <Coffee className="w-5 h-5" />, color: 'bg-emerald-100 text-emerald-600', emoji: '☕' },
 ];
 
 const TaskInput: React.FC<TaskInputProps> = ({ onTasksChange, tasks, onNext, isInline = false, onClose }) => {
@@ -34,6 +35,7 @@ const TaskInput: React.FC<TaskInputProps> = ({ onTasksChange, tasks, onNext, isI
 
     // Determine emoji based on custom or preset
     const emoji = isCustomSubject ? '⚡' : selectedPreset.emoji;
+    const isBreak = !isCustomSubject && selectedPreset.name === 'Rest';
 
     const newTask: Task = {
       id: Date.now().toString(),
@@ -41,15 +43,13 @@ const TaskInput: React.FC<TaskInputProps> = ({ onTasksChange, tasks, onNext, isI
       subject: subjectName || 'General',
       estimatedMinutes: newTaskMinutes,
       status: TaskStatus.PENDING,
-      isBreak: false,
+      isBreak: isBreak,
       emoji: emoji
     };
 
     onTasksChange([...tasks, newTask]);
     setNewTaskTitle('');
-    // We don't close automatically in inline mode to allow adding multiple, 
-    // unless it's a specific requirement. For better UX in modal, maybe close?
-    // Let's keep it open to add multiple, user can close modal manually.
+    
     if (isInline && onClose) {
        onClose();
     }
@@ -57,6 +57,27 @@ const TaskInput: React.FC<TaskInputProps> = ({ onTasksChange, tasks, onNext, isI
 
   const removeTask = (id: string) => {
     onTasksChange(tasks.filter(t => t.id !== id));
+  };
+
+  // Set suggested time based on subject
+  const selectPreset = (sub: typeof DEFAULT_SUBJECTS[0]) => {
+    setIsCustomSubject(false);
+    setSelectedPreset(sub);
+    if (sub.name === 'Rest' && newTaskMinutes > 15) {
+      setNewTaskMinutes(15);
+    } else if (sub.name !== 'Rest' && (newTaskMinutes < 20 || newTaskMinutes === 15)) {
+      setNewTaskMinutes(30);
+    }
+  };
+
+  const handleMinutesChange = (val: string) => {
+    const num = parseInt(val, 10);
+    if (isNaN(num)) {
+      setNewTaskMinutes(0);
+      return;
+    }
+    // Clamp between 1 and 480 (8 hours max)
+    setNewTaskMinutes(Math.min(Math.max(num, 0), 480));
   };
 
   return (
@@ -88,10 +109,7 @@ const TaskInput: React.FC<TaskInputProps> = ({ onTasksChange, tasks, onNext, isI
               {DEFAULT_SUBJECTS.map((sub) => (
                 <button
                   key={sub.name}
-                  onClick={() => {
-                    setIsCustomSubject(false);
-                    setSelectedPreset(sub);
-                  }}
+                  onClick={() => selectPreset(sub)}
                   className={`flex items-center gap-2 px-4 py-2 rounded-full border-2 transition-all ${
                     !isCustomSubject && selectedPreset.name === sub.name
                       ? `${sub.color} border-current ring-2 ring-offset-1 ring-current`
@@ -103,7 +121,6 @@ const TaskInput: React.FC<TaskInputProps> = ({ onTasksChange, tasks, onNext, isI
                 </button>
               ))}
               
-              {/* Custom Subject Button */}
               <button
                 onClick={() => setIsCustomSubject(true)}
                 className={`flex items-center gap-2 px-4 py-2 rounded-full border-2 transition-all ${
@@ -117,7 +134,6 @@ const TaskInput: React.FC<TaskInputProps> = ({ onTasksChange, tasks, onNext, isI
               </button>
             </div>
 
-            {/* Custom Subject Input */}
             {isCustomSubject && (
               <div className="mt-2 animate-fade-in">
                 <input
@@ -133,20 +149,29 @@ const TaskInput: React.FC<TaskInputProps> = ({ onTasksChange, tasks, onNext, isI
           </div>
 
           <div className="space-y-2">
-             <label className="text-sm font-bold text-slate-400 uppercase tracking-wider">Estimated Time</label>
-             <div className="flex items-center gap-4 bg-slate-50 p-2 rounded-2xl border border-slate-100">
+             <label className="text-sm font-bold text-slate-400 uppercase tracking-wider">Estimated Time (minutes)</label>
+             <div className="flex flex-col sm:flex-row items-center gap-4 bg-slate-50 p-4 rounded-2xl border border-slate-100">
                <input 
                   type="range" 
                   min="5" 
                   max="120" 
                   step="5" 
-                  value={newTaskMinutes}
+                  value={newTaskMinutes || 5}
                   onChange={(e) => setNewTaskMinutes(Number(e.target.value))}
-                  className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-500"
+                  className="flex-1 h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-500"
                />
-               <span className="min-w-[4rem] text-center font-bold text-indigo-600 bg-white py-1 px-2 rounded-lg shadow-sm">
-                 {newTaskMinutes} m
-               </span>
+               <div className="flex items-center gap-2">
+                 <input
+                    type="number"
+                    min="1"
+                    max="480"
+                    value={newTaskMinutes || ''}
+                    onChange={(e) => handleMinutesChange(e.target.value)}
+                    onFocus={(e) => e.target.select()}
+                    className="w-20 text-center font-bold text-indigo-600 bg-white py-2 rounded-xl shadow-sm border-2 border-transparent focus:border-indigo-400 focus:outline-none transition-all text-lg"
+                 />
+                 <span className="font-bold text-slate-400">mins</span>
+               </div>
              </div>
           </div>
         </div>
@@ -154,7 +179,7 @@ const TaskInput: React.FC<TaskInputProps> = ({ onTasksChange, tasks, onNext, isI
         <div className="flex gap-3">
           <input
             type="text"
-            placeholder={`e.g., Chapter 3 exercises...`}
+            placeholder={!isCustomSubject && selectedPreset.name === 'Rest' ? "e.g., Stretching, Snack break..." : "e.g., Chapter 3 exercises..."}
             value={newTaskTitle}
             onChange={(e) => setNewTaskTitle(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleAddTask()}
@@ -162,7 +187,7 @@ const TaskInput: React.FC<TaskInputProps> = ({ onTasksChange, tasks, onNext, isI
           />
           <button
             onClick={handleAddTask}
-            disabled={!newTaskTitle.trim() || (isCustomSubject && !customSubjectName.trim())}
+            disabled={!newTaskTitle.trim() || (isCustomSubject && !customSubjectName.trim()) || !newTaskMinutes}
             className="bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed text-white p-4 rounded-2xl transition-all active:scale-95 shadow-lg shadow-indigo-200"
           >
             <Plus className="w-6 h-6" />
@@ -170,19 +195,18 @@ const TaskInput: React.FC<TaskInputProps> = ({ onTasksChange, tasks, onNext, isI
         </div>
       </div>
 
-      {/* Only show list in non-inline mode */}
       {!isInline && tasks.length > 0 && (
         <div className="space-y-4">
            <h3 className="text-xl font-bold text-slate-600 px-2">Your List ({tasks.length})</h3>
            <div className="grid gap-3">
              {tasks.map((task) => (
-               <div key={task.id} className="group flex items-center justify-between bg-white p-4 rounded-2xl shadow-sm border border-slate-100 hover:border-indigo-200 transition-colors">
+               <div key={task.id} className={`group flex items-center justify-between p-4 rounded-2xl shadow-sm border transition-colors ${task.isBreak ? 'bg-emerald-50 border-emerald-100 hover:border-emerald-200' : 'bg-white border-slate-100 hover:border-indigo-200'}`}>
                   <div className="flex items-center gap-4">
-                    <span className="text-2xl bg-slate-50 w-12 h-12 flex items-center justify-center rounded-xl">{task.emoji}</span>
+                    <span className={`text-2xl w-12 h-12 flex items-center justify-center rounded-xl ${task.isBreak ? 'bg-white' : 'bg-slate-50'}`}>{task.emoji}</span>
                     <div>
-                      <h4 className="font-bold text-slate-700 text-lg">{task.title}</h4>
-                      <div className="flex gap-2 text-sm text-slate-500 font-medium">
-                        <span className="uppercase tracking-wide">{task.subject}</span>
+                      <h4 className={`font-bold text-lg ${task.isBreak ? 'text-emerald-800' : 'text-slate-700'}`}>{task.title}</h4>
+                      <div className={`flex gap-2 text-sm font-medium ${task.isBreak ? 'text-emerald-600' : 'text-slate-500'}`}>
+                        <span className="uppercase tracking-wide">{task.isBreak ? 'Break' : task.subject}</span>
                         <span>•</span>
                         <span>{task.estimatedMinutes} mins</span>
                       </div>

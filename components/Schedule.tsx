@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Task, TaskStatus } from '../types';
-import { Play, Check, Clock, Coffee, Trash2, Plus } from 'lucide-react';
+import { Play, Check, Clock, Coffee, Trash2, Plus, ChevronUp, ChevronDown, GripVertical } from 'lucide-react';
 import TaskInput from './TaskInput';
 
 interface ScheduleProps {
@@ -12,6 +12,7 @@ interface ScheduleProps {
 
 const Schedule: React.FC<ScheduleProps> = ({ tasks, onStartTask, onDeleteTask, onTasksChange }) => {
   const [showAddModal, setShowAddModal] = useState(false);
+  const [draggedItemIndex, setDraggedItemIndex] = useState<number | null>(null);
   
   const pendingTasks = tasks.filter(t => t.status === TaskStatus.PENDING || t.status === TaskStatus.ACTIVE);
   const completedTasks = tasks.filter(t => t.status === TaskStatus.COMPLETED);
@@ -37,6 +38,45 @@ const Schedule: React.FC<ScheduleProps> = ({ tasks, onStartTask, onDeleteTask, o
     return t.estimatedMinutes;
   };
 
+  const moveTask = (direction: 'up' | 'down', index: number) => {
+    const newPending = [...pendingTasks];
+    const targetIndex = direction === 'up' ? index - 1 : index + 1;
+    
+    if (targetIndex < 0 || targetIndex >= newPending.length) return;
+
+    const temp = newPending[index];
+    newPending[index] = newPending[targetIndex];
+    newPending[targetIndex] = temp;
+
+    const newFullTasks = [...newPending, ...completedTasks];
+    onTasksChange(newFullTasks);
+  };
+
+  // Drag and Drop Handlers
+  const handleDragStart = (index: number) => {
+    setDraggedItemIndex(index);
+  };
+
+  const handleDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault(); // Necessary to allow drop
+    if (draggedItemIndex === null || draggedItemIndex === index) return;
+
+    const newPending = [...pendingTasks];
+    const draggedItem = newPending[draggedItemIndex];
+    
+    // Reorder array
+    newPending.splice(draggedItemIndex, 1);
+    newPending.splice(index, 0, draggedItem);
+    
+    setDraggedItemIndex(index);
+    const newFullTasks = [...newPending, ...completedTasks];
+    onTasksChange(newFullTasks);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedItemIndex(null);
+  };
+
   const totalMinutes = tasks.reduce((acc, t) => acc + calculateTaskMinutes(t), 0);
   const completedMinutes = completedTasks.reduce((acc, t) => acc + (t.actualDurationSeconds || (t.estimatedMinutes * 60)) / 60, 0);
   const progressPercent = tasks.length > 0 ? (completedMinutes / totalMinutes) * 100 : 0;
@@ -44,7 +84,6 @@ const Schedule: React.FC<ScheduleProps> = ({ tasks, onStartTask, onDeleteTask, o
   return (
     <div className="w-full max-w-4xl mx-auto p-4 animate-fade-in relative">
       
-      {/* Add Task Modal */}
       {showAddModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/30 backdrop-blur-sm animate-fade-in">
           <div className="bg-white w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden animate-bounce-slight">
@@ -57,12 +96,10 @@ const Schedule: React.FC<ScheduleProps> = ({ tasks, onStartTask, onDeleteTask, o
                />
             </div>
           </div>
-          {/* Backdrop click to close */}
           <div className="absolute inset-0 -z-10" onClick={() => setShowAddModal(false)}></div>
         </div>
       )}
 
-      {/* Header Stat */}
       <div className="bg-gradient-to-r from-violet-600 to-indigo-600 rounded-3xl p-8 text-white shadow-2xl mb-8 relative overflow-hidden">
         <div className="relative z-10 flex flex-col md:flex-row justify-between items-center gap-6">
            <div className="space-y-2 text-center md:text-left">
@@ -102,25 +139,55 @@ const Schedule: React.FC<ScheduleProps> = ({ tasks, onStartTask, onDeleteTask, o
             {pendingTasks.map((task, index) => (
               <div 
                 key={task.id}
-                className={`group relative overflow-hidden rounded-2xl border-2 transition-all hover:shadow-lg ${
+                draggable
+                onDragStart={() => handleDragStart(index)}
+                onDragOver={(e) => handleDragOver(e, index)}
+                onDragEnd={handleDragEnd}
+                className={`group relative overflow-hidden rounded-2xl border-2 transition-all cursor-grab active:cursor-grabbing ${
+                  draggedItemIndex === index ? 'opacity-40 border-indigo-400 scale-95' : ''
+                } ${
                   task.isBreak 
                   ? 'bg-emerald-50 border-emerald-100 hover:border-emerald-300' 
-                  : 'bg-white border-slate-100 hover:border-indigo-200'
+                  : 'bg-white border-slate-100 hover:border-indigo-200 hover:shadow-md'
                 }`}
               >
-                <div className="p-5 flex items-center gap-5">
-                   <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-3xl shadow-sm ${task.isBreak ? 'bg-white' : 'bg-slate-50'}`}>
+                <div className="p-5 flex items-center gap-4">
+                   {/* Drag Handle & Reorder Buttons */}
+                   <div className="flex items-center gap-1">
+                     <div className="text-slate-300 group-hover:text-indigo-400 transition-colors">
+                       <GripVertical className="w-5 h-5" />
+                     </div>
+                     <div className="flex flex-col opacity-0 group-hover:opacity-100 transition-opacity md:flex hidden">
+                       <button 
+                         disabled={index === 0}
+                         onClick={(e) => { e.stopPropagation(); moveTask('up', index); }}
+                         className="p-0.5 text-slate-400 hover:text-indigo-600 disabled:opacity-20 transition-colors"
+                       >
+                         <ChevronUp className="w-4 h-4" />
+                       </button>
+                       <button 
+                         disabled={index === pendingTasks.length - 1}
+                         onClick={(e) => { e.stopPropagation(); moveTask('down', index); }}
+                         className="p-0.5 text-slate-400 hover:text-indigo-600 disabled:opacity-20 transition-colors"
+                       >
+                         <ChevronDown className="w-4 h-4" />
+                       </button>
+                     </div>
+                   </div>
+
+                   <div className={`w-14 h-14 rounded-2xl flex-shrink-0 flex items-center justify-center text-3xl shadow-sm transition-transform group-hover:scale-110 ${task.isBreak ? 'bg-white' : 'bg-slate-50'}`}>
                      {task.emoji}
                    </div>
-                   <div className="flex-1">
-                     <h4 className={`font-bold text-lg ${task.isBreak ? 'text-emerald-800' : 'text-slate-800'}`}>{task.title}</h4>
+                   
+                   <div className="flex-1 min-w-0">
+                     <h4 className={`font-bold text-lg truncate ${task.isBreak ? 'text-emerald-800' : 'text-slate-800'}`}>{task.title}</h4>
                      <div className="flex items-center gap-3 text-sm font-medium opacity-70">
                         {task.isBreak ? (
-                          <span className="flex items-center gap-1 text-emerald-600"><Coffee className="w-4 h-4" /> Break Time</span>
+                          <span className="flex items-center gap-1 text-emerald-600"><Coffee className="w-4 h-4" /> Break</span>
                         ) : (
                           <span className="flex items-center gap-1 text-indigo-600"><Clock className="w-4 h-4" /> {formatMins(task.estimatedMinutes)}</span>
                         )}
-                        {index === 0 && <span className="bg-amber-100 text-amber-700 px-2 py-0.5 rounded text-xs">NEXT</span>}
+                        {index === 0 && <span className="bg-amber-100 text-amber-700 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider">Active</span>}
                      </div>
                    </div>
                    
@@ -130,22 +197,19 @@ const Schedule: React.FC<ScheduleProps> = ({ tasks, onStartTask, onDeleteTask, o
                           e.stopPropagation();
                           onDeleteTask(task.id);
                         }}
-                        className="p-3 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-full opacity-0 group-hover:opacity-100 transition-all"
+                        className="p-2 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-full opacity-0 group-hover:opacity-100 transition-all"
                         title="Remove task"
-                        aria-label="Remove task"
                       >
                         <Trash2 className="w-5 h-5" />
                       </button>
 
                      <button 
-                       onClick={() => onStartTask(task)}
-                       title="Click to start this mission"
-                       aria-label="Start mission"
-                       className={`w-12 h-12 rounded-full flex items-center justify-center shadow-md transition-transform hover:scale-110 active:scale-95 ${
+                       onClick={(e) => { e.stopPropagation(); onStartTask(task); }}
+                       className={`w-11 h-11 rounded-full flex items-center justify-center shadow-md transition-transform hover:scale-110 active:scale-95 ${
                           task.isBreak ? 'bg-emerald-500 text-white' : 'bg-indigo-600 text-white'
                        }`}
                      >
-                       <Play className="w-6 h-6 ml-1 fill-current" />
+                       <Play className="w-5 h-5 ml-0.5 fill-current" />
                      </button>
                    </div>
                 </div>
@@ -156,17 +220,6 @@ const Schedule: React.FC<ScheduleProps> = ({ tasks, onStartTask, onDeleteTask, o
                 <span className="text-6xl block mb-4">🎉</span>
                 <h3 className="text-2xl font-bold text-slate-700">All Done!</h3>
                 <p className="text-slate-500">You've completed everything for today.</p>
-              </div>
-            )}
-            {pendingTasks.length === 0 && completedTasks.length === 0 && (
-              <div className="text-center p-12 bg-slate-50 rounded-3xl border border-slate-100">
-                <p className="text-slate-400">No tasks here yet.</p>
-                <button 
-                  onClick={() => setShowAddModal(true)} 
-                  className="mt-4 text-indigo-600 font-bold hover:underline"
-                >
-                  Add a Mission
-                </button>
               </div>
             )}
           </div>
@@ -189,7 +242,7 @@ const Schedule: React.FC<ScheduleProps> = ({ tasks, onStartTask, onDeleteTask, o
                    <div className="opacity-50 text-2xl">{task.emoji}</div>
                    <div className="flex-1">
                      <h4 className="font-bold text-slate-600 line-through decoration-slate-400">{task.title}</h4>
-                     <p className="text-base font-bold text-slate-500 mt-0.5">
+                     <p className="text-[1.1rem] font-bold text-slate-500 mt-0.5">
                        Took {task.actualDurationSeconds ? formatExactDuration(task.actualDurationSeconds) : `${task.estimatedMinutes}m`}
                      </p>
                    </div>
