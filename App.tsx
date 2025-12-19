@@ -119,11 +119,11 @@ const App: React.FC = () => {
   const isToday = getDateKey(currentDate) === getDateKey(new Date());
 
   return (
-    <div className="min-h-screen pb-12">
+    <div className="min-h-screen pb-16">
       <header className="bg-white border-b border-slate-100 sticky top-0 z-50">
-        <div className="max-w-5xl mx-auto px-4 h-20 flex items-center justify-between">
+        <div className="max-w-5xl mx-auto px-6 h-20 flex items-center justify-between">
            <div className="flex items-center gap-3">
-             <div className="bg-indigo-600 text-white p-2 rounded-xl">
+             <div className="bg-indigo-600 text-white p-2.5 rounded-xl shadow-indigo-100 shadow-lg">
                <Sparkles className="w-6 h-6" />
              </div>
              <h1 className="text-2xl font-black tracking-tight text-slate-800">Kiddo<span className="text-indigo-600">Time</span></h1>
@@ -133,9 +133,9 @@ const App: React.FC = () => {
              {!isToday && appState !== AppState.CALENDAR && (
                 <button
                   onClick={() => handleDateChange(new Date())}
-                  className="hidden md:flex items-center gap-2 px-4 py-2 bg-indigo-50 text-indigo-600 rounded-xl font-bold text-sm hover:bg-indigo-100 transition-colors"
+                  className="hidden md:flex items-center gap-2 px-5 py-2.5 bg-indigo-50 text-indigo-600 rounded-xl font-bold text-sm hover:bg-indigo-100 transition-colors"
                 >
-                  Back to Today
+                  Today
                 </button>
              )}
 
@@ -143,7 +143,7 @@ const App: React.FC = () => {
                <>
                  <button 
                     onClick={() => setAppState(AppState.CALENDAR)}
-                    className={`p-2 rounded-xl transition-colors ${appState === AppState.CALENDAR ? 'bg-indigo-100 text-indigo-600' : 'hover:bg-slate-50 text-slate-400 hover:text-indigo-600'}`}
+                    className={`p-2.5 rounded-xl transition-colors ${appState === AppState.CALENDAR ? 'bg-indigo-100 text-indigo-600' : 'hover:bg-slate-50 text-slate-400 hover:text-indigo-600'}`}
                     title="Calendar"
                  >
                    <CalendarIcon className="w-6 h-6" />
@@ -151,8 +151,8 @@ const App: React.FC = () => {
                  
                  <button 
                     onClick={() => setAppState(AppState.PLANNING)}
-                    className={`p-2 rounded-xl transition-colors ${appState === AppState.PLANNING ? 'bg-indigo-100 text-indigo-600' : 'hover:bg-slate-50 text-slate-400 hover:text-indigo-600'}`}
-                    title="View Schedule"
+                    className={`p-2.5 rounded-xl transition-colors ${appState === AppState.PLANNING ? 'bg-indigo-100 text-indigo-600' : 'hover:bg-slate-50 text-slate-400 hover:text-indigo-600'}`}
+                    title="Schedule"
                  >
                    <LayoutDashboard className="w-6 h-6" />
                  </button>
@@ -165,55 +165,56 @@ const App: React.FC = () => {
       <main className="pt-8 px-4">
         {!isToday && appState === AppState.PLANNING && (
           <div className="max-w-4xl mx-auto mb-6">
-             <div className="flex items-center gap-3 bg-amber-50 border border-amber-100 p-4 rounded-2xl text-amber-800">
+             <div className="flex items-center gap-3 bg-amber-50 border border-amber-100 p-4 rounded-2xl text-amber-800 shadow-sm">
                 <CalendarIcon className="w-5 h-5" />
-                <span className="font-bold">Viewing history for: {currentDate.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span>
-                <button onClick={() => handleDateChange(new Date())} className="ml-auto text-sm font-bold underline hover:no-underline">Go to Today</button>
+                <span className="font-bold text-base italic">{currentDate.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })}</span>
+                <button onClick={() => handleDateChange(new Date())} className="ml-auto text-sm font-bold underline hover:no-underline">Back to Today</button>
              </div>
           </div>
         )}
 
         {isGenerating && (
           <div className="fixed inset-0 bg-white/80 backdrop-blur-md z-50 flex flex-col items-center justify-center animate-fade-in">
-             <div className="w-24 h-24 border-8 border-indigo-100 border-t-indigo-600 rounded-full animate-spin mb-8"></div>
-             <h2 className="text-3xl font-bold text-slate-800 animate-pulse">Consulting the Time Wizard...</h2>
-             <p className="text-slate-500 mt-2">Mixing potions for the perfect plan</p>
+             <div className="w-20 h-20 border-[6px] border-indigo-100 border-t-indigo-600 rounded-full animate-spin mb-6"></div>
+             <h2 className="text-2xl font-bold text-slate-800 animate-pulse">Consulting the Time Wizard...</h2>
           </div>
         )}
 
-        {appState === AppState.CALENDAR && (
-          <CalendarView 
-            history={history}
-            selectedDate={currentDate}
-            onSelectDate={handleDateChange}
-            onClose={() => setAppState(AppState.PLANNING)}
-          />
-        )}
+        <div className="max-w-4xl mx-auto">
+          {appState === AppState.CALENDAR && (
+            <CalendarView 
+              history={history}
+              selectedDate={currentDate}
+              onSelectDate={handleDateChange}
+              onClose={() => setAppState(AppState.PLANNING)}
+            />
+          )}
 
-        {appState === AppState.ONBOARDING && (
-          <TaskInput 
-            tasks={tasks} 
-            onTasksChange={updateTasks} 
-            onNext={handleCreateSchedule} 
-          />
-        )}
+          {appState === AppState.ONBOARDING && (
+            <TaskInput 
+              tasks={tasks} 
+              onTasksChange={updateTasks} 
+              onNext={handleCreateSchedule} 
+            />
+          )}
 
-        {appState === AppState.PLANNING && (
-          <Schedule 
-            tasks={tasks} 
-            onStartTask={handleStartTask} 
-            onDeleteTask={handleDeleteTask}
-            onTasksChange={updateTasks}
-          />
-        )}
+          {appState === AppState.PLANNING && (
+            <Schedule 
+              tasks={tasks} 
+              onStartTask={handleStartTask} 
+              onDeleteTask={handleDeleteTask}
+              onTasksChange={updateTasks}
+            />
+          )}
 
-        {appState === AppState.DOING && activeTask && (
-          <Timer 
-            task={activeTask}
-            onComplete={handleCompleteTask}
-            onBack={() => setAppState(AppState.PLANNING)}
-          />
-        )}
+          {appState === AppState.DOING && activeTask && (
+            <Timer 
+              task={activeTask}
+              onComplete={handleCompleteTask}
+              onBack={() => setAppState(AppState.PLANNING)}
+            />
+          )}
+        </div>
       </main>
     </div>
   );

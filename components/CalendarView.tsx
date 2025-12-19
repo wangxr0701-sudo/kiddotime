@@ -15,8 +15,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({ history, onSelectDate, sele
   const getDaysInMonth = (date: Date) => {
     const year = date.getFullYear();
     const month = date.getMonth();
-    const days = new Date(year, month + 1, 0).getDate();
-    return days;
+    return new Date(year, month + 1, 0).getDate();
   };
 
   const getFirstDayOfMonth = (date: Date) => {
@@ -47,7 +46,6 @@ const CalendarView: React.FC<CalendarViewProps> = ({ history, onSelectDate, sele
     const firstDay = getFirstDayOfMonth(currentMonth);
     const days = [];
 
-    // Empty cells for days before the first day of the month
     for (let i = 0; i < firstDay; i++) {
       days.push(<div key={`empty-${i}`} className="h-14"></div>);
     }
@@ -62,7 +60,6 @@ const CalendarView: React.FC<CalendarViewProps> = ({ history, onSelectDate, sele
       const isSelected = dateKey === selectedStr;
       const isToday = dateKey === todayStr;
 
-      // Calculate completion status for dot color
       let dotColor = "bg-slate-300";
       if (hasData) {
         const tasks = history[dateKey];
@@ -79,14 +76,14 @@ const CalendarView: React.FC<CalendarViewProps> = ({ history, onSelectDate, sele
           className={`h-14 relative rounded-xl transition-all flex flex-col items-center justify-center border-2 
             ${isSelected 
               ? 'bg-indigo-600 text-white border-indigo-600 shadow-lg scale-105 z-10' 
-              : 'bg-white border-slate-50 hover:border-indigo-200 text-slate-700 hover:bg-slate-50'
+              : 'bg-white border-slate-50 hover:border-indigo-100 text-slate-700 hover:bg-slate-50'
             }
-            ${isToday && !isSelected ? 'border-indigo-300 bg-indigo-50 font-bold' : ''}
+            ${isToday && !isSelected ? 'border-indigo-200 bg-indigo-50 font-black' : ''}
           `}
         >
-          <span className="text-sm">{i}</span>
+          <span className="text-base font-bold">{i}</span>
           {hasData && (
-             <span className={`absolute bottom-2 w-2 h-2 rounded-full ${dotColor} ${isSelected ? 'ring-2 ring-white' : ''}`}></span>
+             <span className={`absolute bottom-2.5 w-2 h-2 rounded-full ${dotColor} ${isSelected ? 'ring-2 ring-white' : ''}`}></span>
           )}
         </button>
       );
@@ -99,56 +96,44 @@ const CalendarView: React.FC<CalendarViewProps> = ({ history, onSelectDate, sele
 
   return (
     <div className="w-full max-w-4xl mx-auto p-4 animate-fade-in">
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex items-center justify-between mb-6">
         <div>
-          <h2 className="text-3xl font-bold text-slate-800">Time Machine 🕰️</h2>
-          <p className="text-slate-500">Check your past adventures</p>
+          <h2 className="text-2xl font-black text-slate-800">Time Machine 🕰️</h2>
+          <p className="text-slate-400 text-sm font-medium">Browse your homework history</p>
         </div>
-        <button 
-          onClick={onClose}
-          className="p-3 bg-white hover:bg-slate-100 rounded-full text-slate-400 transition-colors shadow-sm border border-slate-100"
-        >
+        <button onClick={onClose} className="p-3 bg-white hover:bg-slate-50 rounded-xl text-slate-300 transition-all border border-slate-100 shadow-sm">
           <X className="w-6 h-6" />
         </button>
       </div>
 
-      <div className="bg-white rounded-3xl shadow-xl border border-slate-100 overflow-hidden">
-        {/* Calendar Header */}
-        <div className="bg-slate-50 p-4 flex items-center justify-between border-b border-slate-100">
-           <button onClick={handlePrevMonth} className="p-2 hover:bg-white rounded-xl text-slate-600 transition-all">
-             <ChevronLeft className="w-6 h-6" />
+      <div className="bg-white rounded-[2rem] shadow-xl border border-slate-50 overflow-hidden">
+        <div className="bg-slate-50 p-6 flex items-center justify-between border-b border-slate-100">
+           <button onClick={handlePrevMonth} className="p-2 hover:bg-white rounded-lg text-slate-500 transition-all">
+             <ChevronLeft className="w-6 h-6 stroke-[3]" />
            </button>
-           <h3 className="text-xl font-bold text-slate-700">
+           <h3 className="text-xl font-black text-slate-700">
              {months[currentMonth.getMonth()]} {currentMonth.getFullYear()}
            </h3>
-           <button onClick={handleNextMonth} className="p-2 hover:bg-white rounded-xl text-slate-600 transition-all">
-             <ChevronRight className="w-6 h-6" />
+           <button onClick={handleNextMonth} className="p-2 hover:bg-white rounded-lg text-slate-500 transition-all">
+             <ChevronRight className="w-6 h-6 stroke-[3]" />
            </button>
         </div>
 
-        {/* Calendar Grid */}
         <div className="p-6">
           <div className="grid grid-cols-7 gap-4 mb-4 text-center">
-            {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
-              <div key={day} className="text-xs font-bold text-slate-400 uppercase tracking-wider">{day}</div>
+            {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map(day => (
+              <div key={day} className="text-[10px] font-black text-slate-300 uppercase tracking-widest">{day}</div>
             ))}
           </div>
-          <div className="grid grid-cols-7 gap-2">
+          <div className="grid grid-cols-7 gap-3">
             {renderCalendarDays()}
           </div>
         </div>
 
-        {/* Legend */}
-        <div className="bg-slate-50 p-4 flex justify-center gap-6 text-xs font-medium text-slate-500 border-t border-slate-100">
-          <div className="flex items-center gap-2">
-            <span className="w-3 h-3 rounded-full bg-indigo-400"></span> Planned
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="w-3 h-3 rounded-full bg-amber-400"></span> In Progress
-          </div>
-          <div className="flex items-center gap-2">
-             <span className="w-3 h-3 rounded-full bg-emerald-400"></span> Completed
-          </div>
+        <div className="bg-slate-50 p-6 flex justify-center gap-6 text-[10px] font-black text-slate-400 uppercase tracking-widest border-t border-slate-100">
+          <div className="flex items-center gap-2"><span className="w-2.5 h-2.5 rounded-full bg-indigo-400"></span> Planned</div>
+          <div className="flex items-center gap-2"><span className="w-2.5 h-2.5 rounded-full bg-amber-400"></span> Working</div>
+          <div className="flex items-center gap-2"><span className="w-2.5 h-2.5 rounded-full bg-emerald-400"></span> Finished</div>
         </div>
       </div>
     </div>
