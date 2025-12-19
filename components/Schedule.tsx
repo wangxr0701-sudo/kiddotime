@@ -23,8 +23,22 @@ const Schedule: React.FC<ScheduleProps> = ({ tasks, onStartTask, onDeleteTask, o
     return `${mins}m`;
   };
 
-  const totalMinutes = tasks.reduce((acc, t) => acc + (t.status === TaskStatus.COMPLETED ? (t.actualMinutes || t.estimatedMinutes) : t.estimatedMinutes), 0);
-  const completedMinutes = completedTasks.reduce((acc, t) => acc + (t.actualMinutes || t.estimatedMinutes), 0);
+  const formatExactDuration = (seconds: number) => {
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    if (m > 0) return `${m}m ${s}s`;
+    return `${s}s`;
+  };
+
+  const calculateTaskMinutes = (t: Task) => {
+    if (t.status === TaskStatus.COMPLETED) {
+      return (t.actualDurationSeconds || (t.estimatedMinutes * 60)) / 60;
+    }
+    return t.estimatedMinutes;
+  };
+
+  const totalMinutes = tasks.reduce((acc, t) => acc + calculateTaskMinutes(t), 0);
+  const completedMinutes = completedTasks.reduce((acc, t) => acc + (t.actualDurationSeconds || (t.estimatedMinutes * 60)) / 60, 0);
   const progressPercent = tasks.length > 0 ? (completedMinutes / totalMinutes) * 100 : 0;
 
   return (
@@ -111,7 +125,6 @@ const Schedule: React.FC<ScheduleProps> = ({ tasks, onStartTask, onDeleteTask, o
                    </div>
                    
                    <div className="flex items-center gap-2">
-                     {/* Delete Button - Moved here to prevent overlap */}
                      <button
                         onClick={(e) => {
                           e.stopPropagation();
@@ -176,7 +189,9 @@ const Schedule: React.FC<ScheduleProps> = ({ tasks, onStartTask, onDeleteTask, o
                    <div className="opacity-50 text-2xl">{task.emoji}</div>
                    <div className="flex-1">
                      <h4 className="font-bold text-slate-600 line-through decoration-slate-400">{task.title}</h4>
-                     <p className="text-xs text-slate-400">Took {task.actualMinutes} mins</p>
+                     <p className="text-base font-bold text-slate-500 mt-0.5">
+                       Took {task.actualDurationSeconds ? formatExactDuration(task.actualDurationSeconds) : `${task.estimatedMinutes}m`}
+                     </p>
                    </div>
                    <div className="text-emerald-500">
                      <Check className="w-6 h-6" />

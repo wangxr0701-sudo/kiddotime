@@ -14,7 +14,7 @@ export interface Task {
   status: TaskStatus;
   isBreak?: boolean; // Whether this is an AI-suggested break
   emoji?: string;
-  actualMinutes?: number;
+  actualDurationSeconds?: number;
 }
 
 export interface UserProfile {
