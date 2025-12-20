@@ -205,24 +205,43 @@ const Schedule: React.FC<ScheduleProps> = ({ tasks, onStartTask, onDeleteTask, o
             <span className="bg-emerald-50 text-emerald-600 px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest">{completedTasks.length} Done</span>
           </div>
 
-          <div className="space-y-3 opacity-80">
+          <div className="space-y-4 opacity-80">
             {completedTasks.length === 0 ? (
               <div className="p-8 text-center text-slate-400 text-base font-medium italic bg-slate-50 rounded-2xl border-2 border-dashed border-slate-100">
                 Start your first mission!
               </div>
             ) : (
               completedTasks.map((task) => (
-                <div key={task.id} className="flex items-center gap-4 bg-slate-50/50 p-4 rounded-xl border border-slate-100 grayscale hover:grayscale-0 transition-all">
-                   <div className="opacity-60 text-2xl">{task.emoji}</div>
-                   <div className="flex-1">
-                     <h4 className="font-black text-base text-slate-600 line-through decoration-slate-300">{task.title}</h4>
-                     <p className="text-[10px] font-bold text-slate-400 mt-0.5 uppercase tracking-widest">
-                       Done in {task.actualDurationSeconds ? formatExactDuration(task.actualDurationSeconds) : `${task.estimatedMinutes}m`}
-                     </p>
-                   </div>
-                   <div className="bg-emerald-100 p-1.5 rounded-full text-emerald-500">
-                     <Check className="w-4 h-4 stroke-[4]" />
-                   </div>
+                <div key={task.id} className="group relative overflow-hidden rounded-2xl border-2 bg-slate-50/50 border-slate-100 grayscale hover:grayscale-0 transition-all">
+                  <div className="p-4 flex items-center gap-4">
+                    {/* Placeholder for alignment (no drag handle for completed) */}
+                    <div className="w-5 h-5" />
+
+                    <div className="w-14 h-14 rounded-xl flex-shrink-0 flex items-center justify-center text-3xl shadow-sm bg-white">
+                      {task.emoji}
+                    </div>
+                    
+                    <div className="flex-1 min-w-0">
+                      <h4 className="font-black text-lg truncate text-slate-600 line-through decoration-slate-300 decoration-[3px]">{task.title}</h4>
+                      <p className="text-[10px] font-bold text-slate-400 mt-0.5 uppercase tracking-widest">
+                        Done in {task.actualDurationSeconds ? formatExactDuration(task.actualDurationSeconds) : `${task.estimatedMinutes}m`}
+                      </p>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={(e) => { e.stopPropagation(); onDeleteTask(task.id); }}
+                        className="p-2 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-xl opacity-0 group-hover:opacity-100 transition-all"
+                        title="Remove mission"
+                      >
+                        <Trash2 className="w-5 h-5" />
+                      </button>
+
+                      <div className="w-11 h-11 rounded-xl flex items-center justify-center bg-emerald-100 text-emerald-500">
+                        <Check className="w-5 h-5 stroke-[4]" />
+                      </div>
+                    </div>
+                  </div>
                 </div>
               ))
             )}
