@@ -10,7 +10,8 @@ import { Sparkles, LayoutDashboard, Calendar as CalendarIcon } from 'lucide-reac
 const STORAGE_KEY = 'kiddotime_history';
 
 const App: React.FC = () => {
-  const [appState, setAppState] = useState<AppState>(AppState.ONBOARDING);
+  // 修改初始状态为 PLANNING，直接进入任务日志
+  const [appState, setAppState] = useState<AppState>(AppState.PLANNING);
   
   // State for the currently viewed date and tasks
   const [currentDate, setCurrentDate] = useState<Date>(new Date());
@@ -37,7 +38,7 @@ const App: React.FC = () => {
         const todayKey = getDateKey(new Date());
         if (parsedHistory[todayKey]) {
           setTasks(parsedHistory[todayKey]);
-          setAppState(AppState.PLANNING);
+          // 状态已经是 PLANNING，所以这里只需要同步任务
         }
       } catch (e) {
         console.error("Failed to parse history", e);
@@ -139,25 +140,21 @@ const App: React.FC = () => {
                 </button>
              )}
 
-             {appState !== AppState.ONBOARDING && (
-               <>
-                 <button 
-                    onClick={() => setAppState(AppState.CALENDAR)}
-                    className={`p-2.5 rounded-xl transition-colors ${appState === AppState.CALENDAR ? 'bg-indigo-100 text-indigo-600' : 'hover:bg-slate-50 text-slate-400 hover:text-indigo-600'}`}
-                    title="Calendar"
-                 >
-                   <CalendarIcon className="w-6 h-6" />
-                 </button>
-                 
-                 <button 
-                    onClick={() => setAppState(AppState.PLANNING)}
-                    className={`p-2.5 rounded-xl transition-colors ${appState === AppState.PLANNING ? 'bg-indigo-100 text-indigo-600' : 'hover:bg-slate-50 text-slate-400 hover:text-indigo-600'}`}
-                    title="Schedule"
-                 >
-                   <LayoutDashboard className="w-6 h-6" />
-                 </button>
-               </>
-             )}
+             <button 
+                onClick={() => setAppState(AppState.CALENDAR)}
+                className={`p-2.5 rounded-xl transition-colors ${appState === AppState.CALENDAR ? 'bg-indigo-100 text-indigo-600' : 'hover:bg-slate-50 text-slate-400 hover:text-indigo-600'}`}
+                title="Calendar"
+             >
+               <CalendarIcon className="w-6 h-6" />
+             </button>
+             
+             <button 
+                onClick={() => setAppState(AppState.PLANNING)}
+                className={`p-2.5 rounded-xl transition-colors ${appState === AppState.PLANNING ? 'bg-indigo-100 text-indigo-600' : 'hover:bg-slate-50 text-slate-400 hover:text-indigo-600'}`}
+                title="Schedule"
+             >
+               <LayoutDashboard className="w-6 h-6" />
+             </button>
            </div>
         </div>
       </header>
